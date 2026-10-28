@@ -45,18 +45,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="mx-auto max-w-md rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-6 shadow-sm">
-      <div className="mb-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2E2A24]/60">
-          Admin access
+    <div className="mx-auto flex min-h-[320px] w-full max-w-md flex-col rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-6 shadow-sm">
+      <div className=" flex flex-col items-center justify-center gap-[0.5]">
+        <h1 className="text-2xl font-bold text-[#2E2A24]">Admin access</h1>
+        <p aria-live="polite" className="mb-3 text-sm leading-5 text-[#2E2A24]/70">
+          {status}
         </p>
-        <h1 className="mt-2 text-2xl font-bold text-[#2E2A24]">Sign in</h1>
-        <p className="mt-2 text-sm text-[#2E2A24]/70">{status}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label htmlFor="email" className="mb-2 block text-sm font-medium text-[#2E2A24]">
+          <label htmlFor="email" className="block text-sm font-medium text-[#2E2A24]">
             Email address
           </label>
           <input
@@ -71,13 +70,14 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-2 block text-sm font-medium text-[#2E2A24]">
+          <label htmlFor="password" className="block text-sm font-medium text-[#2E2A24]">
             Password
           </label>
           <input
             id="password"
             type="password"
             autoComplete="current-password"
+            placeholder="************"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             disabled={!isConfigured || isSubmitting}
@@ -88,7 +88,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={!isConfigured || isSubmitting || !email.trim() || !password}
-          className="w-full rounded-xl bg-[#2E2A24] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-[#2E2A24]/50"
+          className="flex h-11 w-full items-center justify-center rounded-xl bg-[#2E2A24] px-4 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-[#2E2A24]/50"
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>
