@@ -1,277 +1,460 @@
 "use client";
 
-import React, { useState } from "react";
-import { 
-  ShieldCheck, 
-  BookOpen, 
-  HeartHandshake, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import { useState } from "react";
+import {
+  AlertTriangle,
+  BookOpen,
   Calendar,
+  CheckCircle,
+  Clock,
+  HeartHandshake,
+  ShieldCheck,
+  TrendingUp,
   Volume2,
-  AlertTriangle
+  XCircle,
 } from "lucide-react";
 
+type TabKey = "overview" | "moderation" | "the-well" | "content";
+
+const stats = [
+  {
+    label: "North Star Metric",
+    value: "71.4%",
+    detail: "Day 4 Journey Completion Rate",
+    trend: "+4.2%",
+    tone: "emerald",
+  },
+  {
+    label: "Moderation Queue",
+    value: "8",
+    detail: "Pending review",
+    trend: "14 min avg",
+    tone: "amber",
+  },
+  {
+    label: "The Well SLA",
+    value: "100%",
+    detail: "Within 4 hours",
+    trend: "3 at risk",
+    tone: "rose",
+  },
+  {
+    label: "Active Cycle",
+    value: "Week 1",
+    detail: "John 15:5 (ESV)",
+    trend: "Live +",
+    tone: "slate",
+  },
+];
+
+const quickActions = [
+  "Approve 3 flagged reflections",
+  "Review pastoral urgent queue",
+  "Publish weekly scripture drop",
+  "Check completion cohort analytics",
+];
+
+const moderationQueueSeed = [
+  {
+    id: "v-1",
+    user: "Seeker_719",
+    room: "Navigating Grief in the Psalms",
+    phrase: "Praying for comfort in the silence",
+    reflection:
+      "Lost my grandfather this past Monday. Remembering that the Lord is near to the brokenhearted.",
+    submittedAt: "18m ago",
+  },
+  {
+    id: "v-2",
+    user: "JordanM",
+    room: "Faith in the Corporate Workplace",
+    phrase: "Seeking wisdom for difficult meetings",
+    reflection:
+      "Facing layoffs at my company tomorrow. Praying for peace and ethical clarity.",
+    submittedAt: "42m ago",
+  },
+  {
+    id: "v-3",
+    user: "Miriam_L",
+    room: "Community Prayer Rhythm",
+    phrase: "Learning to rest in God’s timing",
+    reflection:
+      "I’ve been waiting on several answers and am learning to trust the Father’s pace. Please pray with me.",
+    submittedAt: "1h ago",
+  },
+];
+
+const pastoralRequestsSeed = [
+  {
+    id: "p-101",
+    seeker: "Sarah (Overwhelmed Seeker)",
+    status: "Received",
+    timeRemaining: "1h 48m",
+    request:
+      "I feel crippled by anxiety regarding my marriage and work fatigue. I need a word of prayer and scripture to hold onto tonight.",
+    submittedAt: "2h 12m ago",
+  },
+  {
+    id: "p-102",
+    seeker: "Marcus T.",
+    status: "Received",
+    timeRemaining: "3h 15m",
+    request:
+      "Struggling with recurring temptation and feeling distant from God. Could a pastor please respond with an audio prayer?",
+    submittedAt: "45m ago",
+  },
+];
+
+const scheduleSeed = [
+  { day: "Mon", theme: "The Cost of Obedience", state: "Published" },
+  { day: "Tue", theme: "Praying in the Waiting", state: "Queued" },
+  { day: "Wed", theme: "The Fear of the Lord", state: "Draft" },
+  { day: "Thu", theme: "Rest for the Weary", state: "Published" },
+  { day: "Fri", theme: "Abiding in Christ", state: "Queued" },
+];
+
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"moderation" | "cms" | "the-well">("moderation");
-
-  // Mock moderation items
-  const [pendingValleyPosts, setPendingValleyPosts] = useState([
-    {
-      id: "v-1",
-      user: "Seeker_719",
-      room: "Navigating Grief in the Psalms",
-      fixedPhrase: "Praying for comfort in the silence",
-      reflection: "Lost my grandfather this past Monday. Remembering that the Lord is near to the brokenhearted.",
-      submittedAt: "18m ago"
-    },
-    {
-      id: "v-2",
-      user: "JordanM",
-      room: "Faith in the Corporate Workplace",
-      fixedPhrase: "Seeking wisdom for difficult meetings",
-      reflection: "Facing layoffs at my company tomorrow. Praying for peace and ethical clarity.",
-      submittedAt: "42m ago"
-    }
-  ]);
-
-  // Mock Pastoral Care Requests (The Well)
-  const [pastoralRequests, setPastoralRequests] = useState([
-    {
-      id: "p-101",
-      seeker: "Sarah (Overwhelmed Seeker)",
-      status: "received",
-      timeRemaining: "1h 48m",
-      request: "I feel crippled by anxiety regarding my marriage and work fatigue. I need a word of prayer and scripture to hold onto tonight.",
-      submittedAt: "2h 12m ago"
-    },
-    {
-      id: "p-102",
-      seeker: "Marcus T.",
-      status: "received",
-      timeRemaining: "3h 15m",
-      request: "Struggling with recurring temptation and feeling distant from God. Could a pastor please respond with an audio prayer?",
-      submittedAt: "45m ago"
-    }
-  ]);
+  const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  const [pendingValleyPosts, setPendingValleyPosts] = useState(moderationQueueSeed);
+  const [pastoralRequests, setPastoralRequests] = useState(pastoralRequestsSeed);
 
   const handleApprove = (id: string) => {
-    setPendingValleyPosts((prev) => prev.filter((p) => p.id !== id));
+    setPendingValleyPosts((prev) => prev.filter((post) => post.id !== id));
   };
 
   const handleReject = (id: string) => {
-    setPendingValleyPosts((prev) => prev.filter((p) => p.id !== id));
+    setPendingValleyPosts((prev) => prev.filter((post) => post.id !== id));
+  };
+
+  const handleResolvePastoral = (id: string) => {
+    setPastoralRequests((prev) => prev.filter((request) => request.id !== id));
   };
 
   return (
-    <div className="space-y-8">
-      {/* KPI Banners */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[#FAF6F0] border border-[#D9CFC4] p-5 rounded-xl shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-[#2E2A24]/60 font-semibold">North Star Metric</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-2xl font-bold text-[#2E2A24]">71.4%</span>
-            <span className="text-xs text-emerald-700 font-medium">↑ +4.2%</span>
+    <div className="space-y-8 pb-12">
+      <div className="grid gap-4 md:grid-cols-4">
+        {stats.map((stat) => (
+          <div key={stat.label} className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-5 shadow-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2E2A24]/60">
+              {stat.label}
+            </p>
+            <div className="mt-3 flex items-baseline gap-2">
+              <span className="text-3xl font-bold text-[#2E2A24]">{stat.value}</span>
+              <span
+                className={
+                  "rounded-full px-2 py-0.5 text-[10px] font-semibold " +
+                  (stat.tone === "emerald"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : stat.tone === "amber"
+                      ? "bg-amber-100 text-amber-700"
+                      : stat.tone === "rose"
+                        ? "bg-rose-100 text-rose-700"
+                        : "bg-slate-100 text-slate-700")
+                }
+              >
+                {stat.trend}
+              </span>
+            </div>
+            <p className="mt-2 text-xs text-[#2E2A24]/70">{stat.detail}</p>
           </div>
-          <p className="text-xs text-[#2E2A24]/70 mt-1">Day 4 Journey Completion Rate</p>
-        </div>
+        ))}
+      </div>
 
-        <div className="bg-[#FAF6F0] border border-[#D9CFC4] p-5 rounded-xl shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-[#2E2A24]/60 font-semibold">Moderation Queue</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-2xl font-bold text-[#E8A98C]">{pendingValleyPosts.length}</span>
-            <span className="text-xs text-[#2E2A24]/60 font-medium">pending review</span>
+      <div className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-4 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: "overview", label: "Overview", icon: TrendingUp },
+              { key: "moderation", label: `Moderation (${pendingValleyPosts.length})`, icon: ShieldCheck },
+              { key: "the-well", label: `The Well (${pastoralRequests.length})`, icon: HeartHandshake },
+              { key: "content", label: "Scripture CMS", icon: BookOpen },
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActiveTab(key as TabKey)}
+                className={
+                  "flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition " +
+                  (activeTab === key
+                    ? "border-[#E8A98C] bg-[#E8A98C]/12 text-[#2E2A24]"
+                    : "border-transparent bg-transparent text-[#2E2A24]/60 hover:border-[#D9CFC4] hover:bg-white/60")
+                }
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </button>
+            ))}
           </div>
-          <p className="text-xs text-[#2E2A24]/70 mt-1">Avg review time: 14 mins</p>
-        </div>
 
-        <div className="bg-[#FAF6F0] border border-[#D9CFC4] p-5 rounded-xl shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-[#2E2A24]/60 font-semibold">The Well SLA</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-2xl font-bold text-amber-700">100%</span>
-            <span className="text-xs text-emerald-700 font-medium">Within 4h</span>
+          <div className="flex items-center gap-2 rounded-full bg-[#2E2A24] px-3 py-2 text-xs font-semibold text-white">
+            <Calendar className="h-3.5 w-3.5" />
+            Week of Prayer • Live
           </div>
-          <p className="text-xs text-[#2E2A24]/70 mt-1">{pastoralRequests.length} active requests awaiting response</p>
-        </div>
-
-        <div className="bg-[#FAF6F0] border border-[#D9CFC4] p-5 rounded-xl shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-[#2E2A24]/60 font-semibold">Active Weekly Cycle</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-2xl font-bold text-[#2E2A24]">Week 1</span>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Live</span>
-          </div>
-          <p className="text-xs text-[#2E2A24]/70 mt-1">John 15:5 (ESV)</p>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-[#D9CFC4] gap-6">
-        <button
-          onClick={() => setActiveTab("moderation")}
-          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
-            activeTab === "moderation"
-              ? "border-[#E8A98C] text-[#2E2A24]"
-              : "border-transparent text-[#2E2A24]/50 hover:text-[#2E2A24]"
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4" /> Moderation Queue ({pendingValleyPosts.length})
-        </button>
+      {activeTab === "overview" && (
+        <div className="grid gap-6 xl:grid-cols-[1.8fr_1fr]">
+          <div className="space-y-6">
+            <section className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-[#2E2A24]">Moderation queue</h2>
+                <span className="text-xs text-[#2E2A24]/60">Zero unmoderated public posts</span>
+              </div>
 
-        <button
-          onClick={() => setActiveTab("the-well")}
-          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
-            activeTab === "the-well"
-              ? "border-[#E8A98C] text-[#2E2A24]"
-              : "border-transparent text-[#2E2A24]/50 hover:text-[#2E2A24]"
-          }`}
-        >
-          <HeartHandshake className="w-4 h-4" /> The Well: Pastoral Care ({pastoralRequests.length})
-        </button>
+              <div className="space-y-4">
+                {pendingValleyPosts.slice(0, 2).map((post) => (
+                  <div key={post.id} className="rounded-xl border border-[#D9CFC4] bg-white/60 p-4">
+                    <div className="mb-2 flex items-center justify-between gap-3 text-xs text-[#2E2A24]/65">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-[#2E2A24]">{post.user}</span>
+                        <span>•</span>
+                        <span>{post.room}</span>
+                      </div>
+                      <span>{post.submittedAt}</span>
+                    </div>
+                    <p className="font-serif text-sm italic text-[#2E2A24]">“{post.phrase}”</p>
+                    <p className="mt-2 text-sm leading-relaxed text-[#2E2A24]/80">{post.reflection}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-        <button
-          onClick={() => setActiveTab("cms")}
-          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
-            activeTab === "cms"
-              ? "border-[#E8A98C] text-[#2E2A24]"
-              : "border-transparent text-[#2E2A24]/50 hover:text-[#2E2A24]"
-          }`}
-        >
-          <BookOpen className="w-4 h-4" /> Scripture CMS & Drops
-        </button>
-      </div>
+            <section className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-[#2E2A24]">Weekly scripture planning</h2>
+                <button type="button" className="rounded-full border border-[#D9CFC4] px-3 py-1.5 text-xs font-semibold text-[#2E2A24]">
+                  Open planner
+                </button>
+              </div>
 
-      {/* Section Content */}
+              <div className="overflow-hidden rounded-xl border border-[#D9CFC4]">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-[#F2EAE0] text-[#2E2A24]/70">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Day</th>
+                      <th className="px-4 py-3 font-semibold">Title</th>
+                      <th className="px-4 py-3 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scheduleSeed.map((entry) => (
+                      <tr key={entry.day} className="border-t border-[#D9CFC4] bg-white/50">
+                        <td className="px-4 py-3 font-medium text-[#2E2A24]">{entry.day}</td>
+                        <td className="px-4 py-3 text-[#2E2A24]/80">{entry.theme}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={
+                              "rounded-full px-2.5 py-1 text-[11px] font-semibold " +
+                              (entry.state === "Published"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : entry.state === "Queued"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-slate-100 text-slate-600")
+                            }
+                          >
+                            {entry.state}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <aside className="space-y-6">
+            <section className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-[#2E2A24]">Quick actions</h2>
+                <Clock className="h-4 w-4 text-[#2E2A24]/60" />
+              </div>
+              <div className="space-y-3">
+                {quickActions.map((action) => (
+                  <button
+                    key={action}
+                    type="button"
+                    className="flex w-full items-center justify-between rounded-xl border border-[#D9CFC4] bg-white/70 px-3 py-2 text-left text-sm text-[#2E2A24]/80 hover:border-[#E8A98C]"
+                  >
+                    <span>{action}</span>
+                    <span className="text-[#2E2A24]/40">→</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-5 shadow-sm">
+              <h2 className="mb-3 text-lg font-bold text-[#2E2A24]">Pastoral care snapshot</h2>
+              <div className="space-y-3">
+                {pastoralRequests.slice(0, 2).map((request) => (
+                  <div key={request.id} className="rounded-xl border border-[#D9CFC4] bg-white/70 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-[#2E2A24]">{request.seeker}</span>
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                        {request.status}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs text-[#2E2A24]/65">SLA: {request.timeRemaining}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </aside>
+        </div>
+      )}
+
       {activeTab === "moderation" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">In The Valley — User Reflections Awaiting Approval</h2>
-            <span className="text-xs text-[#2E2A24]/60">Zero unmoderated text goes live to public boards</span>
+        <section className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-[#2E2A24]">In The Valley moderation</h2>
+              <p className="text-sm text-[#2E2A24]/60">Review public reflections before publishing to the community board.</p>
+            </div>
+            <span className="rounded-full bg-[#E8A98C]/15 px-3 py-1 text-xs font-semibold text-[#2E2A24]">
+              {pendingValleyPosts.length} pending
+            </span>
           </div>
 
           {pendingValleyPosts.length === 0 ? (
-            <div className="p-8 text-center bg-[#FAF6F0] rounded-xl border border-[#D9CFC4] text-sm text-[#2E2A24]/60">
-              ✓ All moderation queues are clear.
+            <div className="rounded-xl border border-dashed border-[#D9CFC4] bg-white/70 p-10 text-center text-sm text-[#2E2A24]/60">
+              All moderation items are clear. No public posts are awaiting review.
             </div>
           ) : (
-            pendingValleyPosts.map((post) => (
-              <div key={post.id} className="p-5 bg-[#FAF6F0] border border-[#D9CFC4] rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1.5 max-w-3xl">
-                  <div className="flex items-center gap-2 text-xs text-[#2E2A24]/70">
-                    <span className="font-semibold text-[#2E2A24]">{post.user}</span>
-                    <span>•</span>
-                    <span className="px-2 py-0.5 rounded-full bg-[#3D5A5B]/15 text-[#3D5A5B] font-medium">{post.room}</span>
-                    <span>•</span>
-                    <span>{post.submittedAt}</span>
+            <div className="space-y-4">
+              {pendingValleyPosts.map((post) => (
+                <div key={post.id} className="flex flex-col gap-4 rounded-2xl border border-[#D9CFC4] bg-white/70 p-5 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#2E2A24]/70">
+                      <span className="font-semibold text-[#2E2A24]">{post.user}</span>
+                      <span>•</span>
+                      <span className="rounded-full bg-[#2E2A24]/5 px-2 py-1 text-[#2E2A24]">{post.room}</span>
+                      <span>•</span>
+                      <span>{post.submittedAt}</span>
+                    </div>
+                    <p className="font-serif text-sm italic text-[#2E2A24]">“{post.phrase}”</p>
+                    <p className="max-w-3xl text-sm leading-relaxed text-[#2E2A24]/80">{post.reflection}</p>
                   </div>
-                  <p className="font-serif italic text-sm font-semibold text-[#2E2A24]">
-                    "{post.fixedPhrase}"
-                  </p>
-                  <p className="text-sm text-[#2E2A24]/85 leading-relaxed">
-                    {post.reflection}
-                  </p>
-                </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <button 
-                    onClick={() => handleReject(post.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-300 text-red-700 hover:bg-red-50 text-xs font-semibold transition"
-                  >
-                    <XCircle className="w-4 h-4" /> Reject
-                  </button>
-                  <button 
-                    onClick={() => handleApprove(post.id)}
-                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#E8A98C] text-white hover:bg-[#d8987b] text-xs font-semibold shadow-sm transition"
-                  >
-                    <CheckCircle className="w-4 h-4" /> Approve to Board
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleReject(post.id)}
+                      className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Reject
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApprove(post.id)}
+                      className="flex items-center gap-2 rounded-lg bg-[#E8A98C] px-3 py-2 text-xs font-semibold text-white shadow-sm"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      Approve
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
-        </div>
+        </section>
       )}
 
       {activeTab === "the-well" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">The Well — Private Pastoral Care Desk</h2>
-            <div className="flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-100 px-3 py-1 rounded-full">
-              <Clock className="w-3.5 h-3.5" /> 4-Hour Response Guarantee SLA Active
+        <section className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-[#2E2A24]">The Well: pastoral care</h2>
+              <p className="text-sm text-[#2E2A24]/60">Private requests routed to pastoral team members and monitored against SLA.</p>
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-800">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              4-hour SLA active
             </div>
           </div>
 
-          {pastoralRequests.map((req) => (
-            <div key={req.id} className="p-6 bg-[#FAF6F0] border border-[#D9CFC4] rounded-xl space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-[#2E2A24]">{req.seeker}</h3>
-                  <span className="text-xs text-[#2E2A24]/60">Received {req.submittedAt}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs font-semibold text-red-700 bg-red-100 px-2.5 py-1 rounded-md">
-                    SLA Deadline: {req.timeRemaining} remaining
+          <div className="space-y-4">
+            {pastoralRequests.map((request) => (
+              <div key={request.id} className="rounded-2xl border border-[#D9CFC4] bg-white/70 p-5">
+                <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-[#2E2A24]">{request.seeker}</h3>
+                    <p className="text-xs text-[#2E2A24]/60">Received {request.submittedAt}</p>
+                  </div>
+                  <span className="rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-semibold text-red-700">
+                    SLA deadline: {request.timeRemaining}
                   </span>
                 </div>
-              </div>
 
-              <div className="p-4 bg-white/70 border border-[#D9CFC4]/50 rounded-lg text-sm text-[#2E2A24] leading-relaxed">
-                "{req.request}"
-              </div>
+                <p className="rounded-xl border border-[#D9CFC4] bg-[#FAF6F0] p-4 text-sm leading-relaxed text-[#2E2A24]/80">
+                  “{request.request}”
+                </p>
 
-              <div className="flex items-center gap-3 pt-2">
-                <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#2E2A24] text-white text-xs font-semibold hover:bg-black transition">
-                  Write Pastoral Response
-                </button>
-                <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#D9CFC4] bg-white text-[#2E2A24] text-xs font-semibold hover:bg-[#FAF6F0] transition">
-                  <Volume2 className="w-4 h-4 text-[#E8A98C]" /> Record 60s Voice Blessing
-                </button>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => handleResolvePastoral(request.id)}
+                    className="flex items-center gap-2 rounded-lg bg-[#2E2A24] px-3 py-2 text-xs font-semibold text-white"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    Mark resolved
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </section>
       )}
 
-      {activeTab === "cms" && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">Scripture Schedule & Context Management</h2>
-            <button className="px-4 py-2 rounded-lg bg-[#E8A98C] text-white text-xs font-semibold shadow-sm hover:bg-[#d8987b] transition">
-              + Schedule Next Week Drop
-            </button>
-          </div>
-
-          <div className="p-6 bg-[#FAF6F0] border border-[#D9CFC4] rounded-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#D9CFC4] pb-4">
-              <div>
-                <span className="text-xs font-bold text-[#E8A98C] uppercase tracking-wider">Current Cycle</span>
-                <h3 className="text-base font-bold text-[#2E2A24]">Week 1: John 15:5 (ESV)</h3>
-              </div>
-              <span className="text-xs font-semibold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
-                Active Worldwide
-              </span>
+      {activeTab === "content" && (
+        <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+          <div className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-[#2E2A24]">Scripture CMS</h2>
+              <button type="button" className="rounded-full bg-[#E8A98C] px-3 py-1.5 text-xs font-semibold text-white">
+                New drop
+              </button>
             </div>
 
-            <p className="font-serif italic text-base text-[#2E2A24] p-4 bg-white/80 rounded-lg border border-[#D9CFC4]/60">
-              "I am the vine; you are the branches. Whoever abides in me and I in him, he it is that bears much fruit, for apart from me you can do nothing."
-            </p>
+            <div className="space-y-3">
+              {[
+                { title: "Week 1: Abiding in Christ", type: "Audio drop", status: "Published" },
+                { title: "Week 2: Strength in waiting", type: "Reflection card", status: "Draft" },
+                { title: "Week 3: Light in the wilderness", type: "Scripture cue", status: "Scheduled" },
+              ].map((item) => (
+                <div key={item.title} className="flex items-center justify-between rounded-xl border border-[#D9CFC4] bg-white/70 p-4">
+                  <div>
+                    <p className="font-semibold text-[#2E2A24]">{item.title}</p>
+                    <p className="text-xs text-[#2E2A24]/60">{item.type}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-full bg-[#2E2A24]/5 px-2 py-1 text-[10px] font-semibold text-[#2E2A24]">{item.status}</span>
+                    <Volume2 className="h-4 w-4 text-[#2E2A24]/60" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-              <div className="p-3 bg-white/60 border border-[#D9CFC4]/60 rounded-lg text-xs">
-                <p className="font-bold text-[#2E2A24]">Day 1 Video Asset</p>
-                <p className="text-[#2E2A24]/70 mt-1">week1_encounter_hd.mp4 (4K H.265)</p>
+          <div className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-5 shadow-sm">
+            <h2 className="mb-4 text-lg font-bold text-[#2E2A24]">Publishing notes</h2>
+            <div className="space-y-3 text-sm text-[#2E2A24]/75">
+              <div className="rounded-xl border border-[#D9CFC4] bg-white/70 p-3">
+                <p className="font-semibold text-[#2E2A24]">Review checklist</p>
+                <ul className="mt-2 list-disc pl-5 space-y-1">
+                  <li>Audio transcript approved</li>
+                  <li>Theme references checked</li>
+                  <li>Timing fits weekly journey</li>
+                </ul>
               </div>
-              <div className="p-3 bg-white/60 border border-[#D9CFC4]/60 rounded-lg text-xs">
-                <p className="font-bold text-[#2E2A24]">Day 2 Context Cards</p>
-                <p className="text-[#2E2A24]/70 mt-1">3 Historical & Exegetical Cards</p>
-              </div>
-              <div className="p-3 bg-white/60 border border-[#D9CFC4]/60 rounded-lg text-xs">
-                <p className="font-bold text-[#2E2A24]">Day 3 Ambient Sound</p>
-                <p className="text-[#2E2A24]/70 mt-1">Preset: Sanctuary Dawn (432Hz)</p>
+              <div className="rounded-xl border border-[#D9CFC4] bg-white/70 p-3">
+                <p className="font-semibold text-[#2E2A24]">Next publish</p>
+                <p className="mt-2">Thursday • 8:00 AM • “Rest for the Weary”</p>
               </div>
             </div>
           </div>
-        </div>
+        </section>
       )}
     </div>
   );
