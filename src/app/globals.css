@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #2E2A24;
+  --sand: #F2EAE0;
+  --coral: #E8A98C;
+  --taupe: #D9CFC4;
+  --surface: #FAF6F0;
+}
+
+body {
+  color: var(--ink);
+  background: var(--sand);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
