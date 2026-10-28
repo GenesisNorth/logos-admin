@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   AlertTriangle,
   BookOpen,
-  Calendar,
   CheckCircle,
   Clock,
   HeartHandshake,
@@ -114,7 +113,7 @@ const scheduleSeed = [
 ];
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  const [activeTab] = useState<TabKey>("overview");
   const [pendingValleyPosts, setPendingValleyPosts] = useState(moderationQueueSeed);
   const [pastoralRequests, setPastoralRequests] = useState(pastoralRequestsSeed);
 
@@ -131,7 +130,18 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-4 pb-8">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2E2A24]/55">Admin dashboard</p>
+          <h1 className="mt-1 text-2xl font-bold text-[#2E2A24]">Overview</h1>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg bg-[#2E2A24] px-3 py-2 text-xs font-semibold text-white">
+          <Clock className="h-3.5 w-3.5" />
+          Week of Prayer · Live
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4">
         {stats.map((stat) => (
           <div key={stat.label} className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-5 shadow-sm">
@@ -158,39 +168,6 @@ export default function AdminDashboard() {
             <p className="mt-2 text-xs text-[#2E2A24]/70">{stat.detail}</p>
           </div>
         ))}
-      </div>
-
-      <div className="rounded-2xl border border-[#D9CFC4] bg-[#FAF6F0] p-4 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {[
-              { key: "overview", label: "Overview", icon: TrendingUp },
-              { key: "moderation", label: `Moderation (${pendingValleyPosts.length})`, icon: ShieldCheck },
-              { key: "the-well", label: `The Well (${pastoralRequests.length})`, icon: HeartHandshake },
-              { key: "content", label: "Scripture CMS", icon: BookOpen },
-            ].map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setActiveTab(key as TabKey)}
-                className={
-                  "flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition " +
-                  (activeTab === key
-                    ? "border-[#E8A98C] bg-[#E8A98C]/12 text-[#2E2A24]"
-                    : "border-transparent bg-transparent text-[#2E2A24]/60 hover:border-[#D9CFC4] hover:bg-white/60")
-                }
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 rounded-full bg-[#2E2A24] px-3 py-2 text-xs font-semibold text-white">
-            <Calendar className="h-3.5 w-3.5" />
-            Week of Prayer • Live
-          </div>
-        </div>
       </div>
 
       {activeTab === "overview" && (
