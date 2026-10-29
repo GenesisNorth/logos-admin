@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BookOpen, HeartHandshake, LayoutDashboard, Route, UsersRound,
+  Activity, BookOpen, HeartHandshake, LayoutDashboard, Route, UsersRound,
   ShieldCheck, LogOut, Menu, X,
 } from "lucide-react";
 import { useState } from "react";
 import type { DashboardCounts } from "@/lib/supabase/queries";
 
-export default function Sidebar({ counts }: { counts: DashboardCounts }) {
+export default function Sidebar({ counts, isSuperAdmin }: { counts: DashboardCounts; isSuperAdmin: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -37,6 +37,7 @@ export default function Sidebar({ counts }: { counts: DashboardCounts }) {
     { href: "/journey", label: "Journey CMS", icon: Route, badge: 0 },
     { href: "/community", label: "Community", icon: UsersRound, badge: 0 },
     { href: "/members", label: "Members", icon: UsersRound, badge: 0 },
+    ...(isSuperAdmin ? [{ href: "/admin-activity", label: "Admin activity", icon: Activity, badge: 0 }] : []),
   ];
 
   return (
