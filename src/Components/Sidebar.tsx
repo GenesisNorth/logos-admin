@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BookOpen, HeartHandshake, LayoutDashboard, Route,
+  BookOpen, HeartHandshake, LayoutDashboard, Route, UsersRound,
   ShieldCheck, LogOut, Menu, X,
 } from "lucide-react";
 import { useState } from "react";
@@ -35,6 +35,7 @@ export default function Sidebar({ counts }: { counts: DashboardCounts }) {
       badge: counts.contentDrafts,
     },
     { href: "/journey", label: "Journey CMS", icon: Route, badge: 0 },
+    { href: "/community", label: "Community", icon: UsersRound, badge: 0 },
   ];
 
   return (
