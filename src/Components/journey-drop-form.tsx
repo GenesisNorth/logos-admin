@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState, useTransition } from "react";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { saveScriptureDrop } from "@/lib/actions/journey";
 import type { ScriptureDrop } from "@/lib/supabase/journey-queries";
 
@@ -23,6 +23,7 @@ const emptyDrop: Omit<ScriptureDrop, "id"> = {
 export function JourneyDropForm({ drop }: { drop?: ScriptureDrop }) {
   const current = drop ?? emptyDrop;
   const [isPending, startTransition] = useTransition();
+  const [contextCards, setContextCards] = useState(current.day_2_context_cards);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const localPublishAt = current.publish_at
@@ -45,7 +46,7 @@ export function JourneyDropForm({ drop }: { drop?: ScriptureDrop }) {
         translation: String(formData.get("translation") ?? ""),
         videoUrl: String(formData.get("videoUrl") ?? ""),
         encounterLines: String(formData.get("encounterLines") ?? ""),
-        contextCards: String(formData.get("contextCards") ?? "[]"),
+        contextCards: JSON.stringify(contextCards),
         ambientPreset: String(formData.get("ambientPreset") ?? ""),
         ambientLabel: String(formData.get("ambientLabel") ?? ""),
         status: String(formData.get("status") ?? "draft"),
@@ -107,10 +108,23 @@ export function JourneyDropForm({ drop }: { drop?: ScriptureDrop }) {
         Day 1 encounter lines <span className="font-normal">(one line per screen)</span>
         <textarea name="encounterLines" rows={4} defaultValue={current.day_1_encounter_lines.join("\n")} className="block w-full resize-y rounded-md border border-[#D9CFC4] bg-white px-2.5 py-2 text-sm" />
       </label>
-      <label className="block space-y-1 text-xs font-semibold text-[#2E2A24]/75">
-        Day 2 context cards <span className="font-normal">(JSON array: title, subtitle, content)</span>
-        <textarea name="contextCards" rows={5} defaultValue={JSON.stringify(current.day_2_context_cards, null, 2)} className="block w-full resize-y rounded-md border border-[#D9CFC4] bg-white px-2.5 py-2 font-mono text-xs" />
-      </label>
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-xs font-semibold text-[#2E2A24]/75">Day 2 context cards</h3>
+          <button type="button" onClick={() => setContextCards((cards) => [...cards, { title: "", subtitle: "", content: "" }])} className="flex items-center gap-1 rounded-md border border-[#D9CFC4] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#2E2A24] hover:bg-[#F2EAE0]"><Plus className="h-3.5 w-3.5" />Add card</button>
+        </div>
+        {contextCards.length === 0 && <p className="rounded-md border border-dashed border-[#D9CFC4] p-3 text-xs text-[#2E2A24]/60">No context cards added.</p>}
+        {contextCards.map((card, index) => (
+          <fieldset key={index} className="space-y-3 rounded-md border border-[#D9CFC4] bg-[#FAF6F0] p-3">
+            <div className="flex items-center justify-between"><legend className="text-xs font-semibold text-[#2E2A24]">Context card {index + 1}</legend><button type="button" aria-label={`Remove context card ${index + 1}`} onClick={() => setContextCards((cards) => cards.filter((_, cardIndex) => cardIndex !== index))} className="rounded p-1.5 text-red-700 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1 text-xs font-medium text-[#2E2A24]/75">Title<input value={card.title} maxLength={160} onChange={(event) => setContextCards((cards) => cards.map((item, cardIndex) => cardIndex === index ? { ...item, title: event.target.value } : item))} className="block w-full rounded-md border border-[#D9CFC4] bg-white px-2.5 py-2 text-sm" /></label>
+              <label className="space-y-1 text-xs font-medium text-[#2E2A24]/75">Subtitle<input value={card.subtitle} maxLength={200} onChange={(event) => setContextCards((cards) => cards.map((item, cardIndex) => cardIndex === index ? { ...item, subtitle: event.target.value } : item))} className="block w-full rounded-md border border-[#D9CFC4] bg-white px-2.5 py-2 text-sm" /></label>
+            </div>
+            <label className="block space-y-1 text-xs font-medium text-[#2E2A24]/75">Explanation<textarea value={card.content} maxLength={5000} rows={3} onChange={(event) => setContextCards((cards) => cards.map((item, cardIndex) => cardIndex === index ? { ...item, content: event.target.value } : item))} className="block w-full resize-y rounded-md border border-[#D9CFC4] bg-white px-2.5 py-2 text-sm" /></label>
+          </fieldset>
+        ))}
+      </section>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="space-y-1 text-xs font-semibold text-[#2E2A24]/75">
           Day 3 ambient preset

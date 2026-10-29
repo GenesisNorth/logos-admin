@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState, useTransition } from "react";
-import { Check, Loader2, Save, X } from "lucide-react";
+import { Check, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import { reviewVoiceSubmission, saveCommunitySpace } from "@/lib/actions/community";
 import type { CommunitySpace, VoiceSubmission } from "@/lib/supabase/community-queries";
 
@@ -10,6 +10,8 @@ const labels = { valley_room: "Valley room", study_pod: "Study pod", prayer_circ
 function SpaceForm({ space }: { space?: CommunitySpace }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
+  const [fixedPhrases, setFixedPhrases] = useState(space?.fixed_phrases ?? []);
+  const [discussionQuestions, setDiscussionQuestions] = useState(space?.discussion_questions ?? []);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -24,8 +26,8 @@ function SpaceForm({ space }: { space?: CommunitySpace }) {
         scheduleText: String(data.get("scheduleText") ?? ""),
         memberCapacity: String(data.get("memberCapacity") ?? ""),
         expirationDays: String(data.get("expirationDays") ?? ""),
-        fixedPhrases: String(data.get("fixedPhrases") ?? "[]"),
-        discussionQuestions: String(data.get("discussionQuestions") ?? "[]"),
+        fixedPhrases: JSON.stringify(fixedPhrases),
+        discussionQuestions: JSON.stringify(discussionQuestions),
         status: String(data.get("status") ?? "active"),
         sortOrder: String(data.get("sortOrder") ?? "0"),
       });
@@ -62,13 +64,9 @@ function SpaceForm({ space }: { space?: CommunitySpace }) {
           <input name="expirationDays" type="number" min="1" defaultValue={space?.expiration_days ?? ""} className="block w-full rounded-md border border-[#D9CFC4] bg-white px-2 py-2 text-sm" />
         </label>
       </div>
-      <div className="grid gap-3 lg:grid-cols-2">
-        <label className="space-y-1 text-xs font-semibold text-[#2E2A24]/75">Fixed phrases (JSON string array)
-          <textarea name="fixedPhrases" rows={3} defaultValue={JSON.stringify(space?.fixed_phrases ?? [], null, 2)} className="block w-full resize-y rounded-md border border-[#D9CFC4] bg-white px-2 py-2 font-mono text-xs" />
-        </label>
-        <label className="space-y-1 text-xs font-semibold text-[#2E2A24]/75">Discussion questions (JSON string array)
-          <textarea name="discussionQuestions" rows={3} defaultValue={JSON.stringify(space?.discussion_questions ?? [], null, 2)} className="block w-full resize-y rounded-md border border-[#D9CFC4] bg-white px-2 py-2 font-mono text-xs" />
-        </label>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <StringListEditor title="Encouragement phrases" items={fixedPhrases} onChange={setFixedPhrases} addLabel="Add phrase" />
+        <StringListEditor title="Discussion questions" items={discussionQuestions} onChange={setDiscussionQuestions} addLabel="Add question" multiline />
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#D9CFC4] pt-3">
         <label className="flex items-center gap-2 text-xs font-medium text-[#2E2A24]/75">Order <input name="sortOrder" type="number" defaultValue={space?.sort_order ?? 0} className="w-20 rounded-md border border-[#D9CFC4] bg-white px-2 py-1.5" /></label>
@@ -113,5 +111,30 @@ export function CommunityOperations({ spaces, submissions }: { spaces: Community
       })}
       <section className="space-y-3 border-t border-[#D9CFC4] pt-5"><h2 className="text-base font-bold text-[#2E2A24]">Voice Comfort review <span className="text-xs font-normal text-[#2E2A24]/60">{submissions.length} pending</span></h2>{submissions.length ? submissions.map((submission) => <VoiceReview key={submission.id} submission={submission} />) : <p className="rounded-lg border border-dashed border-[#D9CFC4] bg-white/60 p-6 text-sm text-[#2E2A24]/60">No voice contributions are awaiting review.</p>}</section>
     </div>
+  );
+}
+
+function StringListEditor({
+  title,
+  items,
+  onChange,
+  addLabel,
+  multiline = false,
+}: {
+  title: string;
+  items: string[];
+  onChange: (items: string[]) => void;
+  addLabel: string;
+  multiline?: boolean;
+}) {
+  return (
+    <section className="space-y-2 rounded-md border border-[#D9CFC4] bg-[#FAF6F0] p-3">
+      <div className="flex items-center justify-between gap-2"><h3 className="text-xs font-semibold text-[#2E2A24]/75">{title}</h3><button type="button" onClick={() => onChange([...items, ""])} className="flex items-center gap-1 rounded-md border border-[#D9CFC4] bg-white px-2 py-1 text-[11px] font-semibold text-[#2E2A24] hover:bg-[#F2EAE0]"><Plus className="h-3 w-3" />{addLabel}</button></div>
+      {items.length === 0 && <p className="text-xs text-[#2E2A24]/55">No entries yet.</p>}
+      {items.map((item, index) => {
+        const Input = multiline ? "textarea" : "input";
+        return <div key={index} className="flex items-start gap-2"><Input value={item} maxLength={500} rows={multiline ? 2 : undefined} onChange={(event) => onChange(items.map((value, itemIndex) => itemIndex === index ? event.target.value : value))} className="min-w-0 flex-1 rounded-md border border-[#D9CFC4] bg-white px-2.5 py-2 text-sm" /><button type="button" aria-label={`Remove ${title.toLowerCase()} ${index + 1}`} onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))} className="rounded p-1.5 text-red-700 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button></div>;
+      })}
+    </section>
   );
 }
