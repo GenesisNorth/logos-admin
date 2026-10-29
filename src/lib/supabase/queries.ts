@@ -14,6 +14,8 @@ export type PastoralRequest = {
   seeker_name: string;
   status: "received" | "in_review" | "resolved";
   request_text: string;
+  response_text: string | null;
+  response_audio_url: string | null;
   created_at: string;
   sla_deadline: string;
 };
@@ -23,6 +25,8 @@ export type ContentDrop = {
   title: string;
   type: "audio" | "reflection" | "scripture";
   status: "draft" | "scheduled" | "published";
+  content: string | null;
+  media_url: string | null;
   publish_at: string | null;
 };
 
@@ -82,7 +86,7 @@ export async function getPastoralRequests(): Promise<PastoralRequest[]> {
 
   const { data } = await supabase
     .from("pastoral_requests")
-    .select("id, seeker_name, status, request_text, created_at, sla_deadline")
+    .select("id, seeker_name, status, request_text, response_text, response_audio_url, created_at, sla_deadline")
     .in("status", ["received", "in_review"])
     .order("sla_deadline", { ascending: true });
 
@@ -95,7 +99,7 @@ export async function getContentDrops(): Promise<ContentDrop[]> {
 
   const { data } = await supabase
     .from("content_drops")
-    .select("id, title, type, status, publish_at")
+    .select("id, title, type, status, content, media_url, publish_at")
     .order("publish_at", { ascending: true, nullsFirst: false });
 
   return data ?? [];
