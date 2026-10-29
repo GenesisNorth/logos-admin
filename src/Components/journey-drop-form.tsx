@@ -20,7 +20,7 @@ const emptyDrop: Omit<ScriptureDrop, "id"> = {
   publish_at: null,
 };
 
-export function JourneyDropForm({ drop }: { drop?: ScriptureDrop }) {
+export function JourneyDropForm({ drop, onSaved }: { drop?: ScriptureDrop; onSaved?: () => void }) {
   const current = drop ?? emptyDrop;
   const [isPending, startTransition] = useTransition();
   const [contextCards, setContextCards] = useState(current.day_2_context_cards);
@@ -57,6 +57,7 @@ export function JourneyDropForm({ drop }: { drop?: ScriptureDrop }) {
         return;
       }
       setSuccessMessage("Journey content saved.");
+      onSaved?.();
     });
   };
 

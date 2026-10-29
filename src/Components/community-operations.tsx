@@ -1,13 +1,14 @@
 "use client";
 
-import { FormEvent, useState, useTransition } from "react";
-import { Check, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { FormEvent, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Check, Loader2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { reviewVoiceSubmission, saveCommunitySpace } from "@/lib/actions/community";
 import type { CommunitySpace, VoiceSubmission } from "@/lib/supabase/community-queries";
 
 const labels = { valley_room: "Valley room", study_pod: "Study pod", prayer_circle: "Prayer circle" };
 
-function SpaceForm({ space }: { space?: CommunitySpace }) {
+function SpaceForm({ space, onSaved }: { space?: CommunitySpace; onSaved?: () => void }) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
   const [fixedPhrases, setFixedPhrases] = useState(space?.fixed_phrases ?? []);
@@ -32,6 +33,7 @@ function SpaceForm({ space }: { space?: CommunitySpace }) {
         sortOrder: String(data.get("sortOrder") ?? "0"),
       });
       setMessage(result?.error ?? "Saved.");
+      if (!result?.error) onSaved?.();
     });
   };
 
@@ -101,15 +103,51 @@ function VoiceReview({ submission }: { submission: VoiceSubmission }) {
 }
 
 export function CommunityOperations({ spaces, submissions }: { spaces: CommunitySpace[]; submissions: VoiceSubmission[] }) {
+  const router = useRouter();
+  const [isSpaceModalOpen, setIsSpaceModalOpen] = useState(false);
+  const [selectedSpace, setSelectedSpace] = useState<CommunitySpace | undefined>();
   const types = ["valley_room", "study_pod", "prayer_circle"] as const;
+
+  useEffect(() => {
+    if (!isSpaceModalOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsSpaceModalOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSpaceModalOpen]);
+
+  const openCreate = () => {
+    setSelectedSpace(undefined);
+    setIsSpaceModalOpen(true);
+  };
+
+  const openEdit = (space: CommunitySpace) => {
+    setSelectedSpace(space);
+    setIsSpaceModalOpen(true);
+  };
+
+  const closeAfterSave = () => {
+    setIsSpaceModalOpen(false);
+    router.refresh();
+  };
+
   return (
     <div className="space-y-6">
-      <section className="space-y-3"><h2 className="text-base font-bold text-[#2E2A24]">Add community space</h2><SpaceForm /></section>
+      <div className="flex justify-end"><button type="button" onClick={openCreate} className="flex items-center gap-2 rounded-md bg-[#2E2A24] px-3 py-2 text-xs font-semibold text-white hover:bg-black"><Plus className="h-4 w-4" />Add space</button></div>
       {types.map((type) => {
         const group = spaces.filter((space) => space.space_type === type);
-        return <section key={type} className="space-y-3"><h2 className="text-base font-bold text-[#2E2A24]">{labels[type]} <span className="text-xs font-normal text-[#2E2A24]/60">{group.length}</span></h2>{group.length ? group.map((space) => <details key={space.id} className="rounded-lg border border-[#D9CFC4] bg-[#FAF6F0]"><summary className="flex cursor-pointer list-none justify-between gap-3 px-4 py-3"><span className="font-semibold text-[#2E2A24]">{space.title}</span><span className="text-xs capitalize text-[#2E2A24]/60">{space.status}</span></summary><div className="border-t border-[#D9CFC4] p-3 sm:p-4"><SpaceForm space={space} /></div></details>) : <p className="rounded-lg border border-dashed border-[#D9CFC4] bg-white/60 p-4 text-sm text-[#2E2A24]/60">No {labels[type].toLowerCase()} entries configured.</p>}</section>;
+        return <section key={type} className="space-y-3"><h2 className="text-base font-bold text-[#2E2A24]">{labels[type]} <span className="text-xs font-normal text-[#2E2A24]/60">{group.length}</span></h2>{group.length ? <div className="divide-y divide-[#D9CFC4] rounded-lg border border-[#D9CFC4] bg-[#FAF6F0]">{group.map((space) => <article key={space.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"><div className="min-w-0"><p className="font-semibold text-[#2E2A24]">{space.title}</p><p className="text-xs text-[#2E2A24]/60"><span className="capitalize">{space.status}</span>{space.schedule_text ? ` · ${space.schedule_text}` : ""}</p></div><button type="button" onClick={() => openEdit(space)} aria-label={`Edit ${space.title}`} className="rounded-md border border-[#D9CFC4] bg-white p-2 text-[#2E2A24] hover:bg-[#F2EAE0]"><Pencil className="h-4 w-4" /></button></article>)}</div> : <p className="rounded-lg border border-dashed border-[#D9CFC4] bg-white/60 p-4 text-sm text-[#2E2A24]/60">No {labels[type].toLowerCase()} entries configured.</p>}</section>;
       })}
       <section className="space-y-3 border-t border-[#D9CFC4] pt-5"><h2 className="text-base font-bold text-[#2E2A24]">Voice Comfort review <span className="text-xs font-normal text-[#2E2A24]/60">{submissions.length} pending</span></h2>{submissions.length ? submissions.map((submission) => <VoiceReview key={submission.id} submission={submission} />) : <p className="rounded-lg border border-dashed border-[#D9CFC4] bg-white/60 p-6 text-sm text-[#2E2A24]/60">No voice contributions are awaiting review.</p>}</section>
+      {isSpaceModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2E2A24]/55 p-3 backdrop-blur-sm sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsSpaceModalOpen(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="community-space-modal-title" className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-[#D9CFC4] bg-[#FAF6F0] shadow-2xl">
+            <header className="flex items-start justify-between gap-4 border-b border-[#D9CFC4] px-5 py-4 sm:px-6"><div><p className="text-xs font-semibold uppercase text-[#2E2A24]/55">Community operations</p><h2 id="community-space-modal-title" className="mt-1 text-xl font-bold text-[#2E2A24]">{selectedSpace ? `Edit ${selectedSpace.title}` : "Add community space"}</h2></div><button type="button" onClick={() => setIsSpaceModalOpen(false)} aria-label="Close community space editor" className="rounded-md p-2 text-[#2E2A24]/65 hover:bg-[#F2EAE0]"><X className="h-5 w-5" /></button></header>
+            <div className="overflow-y-auto p-4 sm:p-6"><SpaceForm key={selectedSpace?.id ?? "new"} space={selectedSpace} onSaved={closeAfterSave} /></div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
