@@ -36,6 +36,7 @@ export default function Sidebar({ counts }: { counts: DashboardCounts }) {
     },
     { href: "/journey", label: "Journey CMS", icon: Route, badge: 0 },
     { href: "/community", label: "Community", icon: UsersRound, badge: 0 },
+    { href: "/members", label: "Members", icon: UsersRound, badge: 0 },
   ];
 
   return (
