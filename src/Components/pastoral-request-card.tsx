@@ -1,8 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { FormEvent, useState, useTransition } from "react";
 import { AlertTriangle, CheckCircle, Clock, Loader2 } from "lucide-react";
-import { resolvePastoralRequest } from "@/lib/actions/pastoral";
+import { resolvePastoralRequest, savePastoralResponse } from "@/lib/actions/pastoral";
 import { formatRelative, formatTimeRemaining } from "@/lib/utils/format";
 import type { PastoralRequest } from "@/lib/supabase/queries";
 
@@ -19,11 +19,29 @@ export function PastoralRequestCard({
   request: PastoralRequest;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [errorMessage, setErrorMessage] = useState("");
   const sla = formatTimeRemaining(request.sla_deadline);
 
-  const handleResolve = () => {
+  const handleSaveResponse = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    setErrorMessage("");
+
     startTransition(async () => {
-      await resolvePastoralRequest(request.id);
+      const result = await savePastoralResponse({
+        id: request.id,
+        responseText: String(formData.get("responseText") ?? ""),
+        responseAudioUrl: String(formData.get("responseAudioUrl") ?? ""),
+      });
+      if (result?.error) setErrorMessage(result.error);
+    });
+  };
+
+  const handleResolve = () => {
+    setErrorMessage("");
+    startTransition(async () => {
+      const result = await resolvePastoralRequest(request.id);
+      if (result?.error) setErrorMessage(result.error);
     });
   };
 
@@ -60,7 +78,36 @@ export function PastoralRequestCard({
         "{request.request_text}"
       </p>
 
-      <div className="mt-4 flex justify-end">
+      <form onSubmit={handleSaveResponse} className="mt-4 space-y-3 border-t border-[#D9CFC4] pt-4">
+        <label className="block space-y-1 text-xs font-medium text-[#2E2A24]/75">
+          Pastoral response
+          <textarea
+            name="responseText"
+            rows={4}
+            maxLength={20000}
+            defaultValue={request.response_text ?? ""}
+            className="block w-full resize-y rounded-md border border-[#D9CFC4] bg-white px-3 py-2 text-sm text-[#2E2A24]"
+          />
+        </label>
+        <label className="block space-y-1 text-xs font-medium text-[#2E2A24]/75">
+          Audio response URL
+          <input
+            name="responseAudioUrl"
+            type="url"
+            defaultValue={request.response_audio_url ?? ""}
+            placeholder="https://..."
+            className="block w-full rounded-md border border-[#D9CFC4] bg-white px-3 py-2 text-sm text-[#2E2A24]"
+          />
+        </label>
+        <div className="flex flex-wrap justify-end gap-2">
+          <button
+            type="submit"
+            disabled={isPending}
+            className="flex items-center gap-2 rounded-lg border border-[#D9CFC4] bg-white px-3 py-2 text-xs font-semibold text-[#2E2A24] transition hover:bg-[#F2EAE0] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            Save response
+          </button>
         <button
           type="button"
           onClick={handleResolve}
@@ -74,7 +121,9 @@ export function PastoralRequestCard({
           )}
           Mark resolved
         </button>
-      </div>
+        </div>
+        {errorMessage && <p role="alert" className="text-xs text-red-700">{errorMessage}</p>}
+      </form>
     </div>
   );
 }
